@@ -1,75 +1,140 @@
-# claude-security-guard — Claude Code Operations + Security Plugin
+# claude-security-guard
 
-![hooks](https://img.shields.io/badge/hooks-13-orange) ![mcp-tools](https://img.shields.io/badge/mcp--tools-27-blue) ![commands](https://img.shields.io/badge/commands-2-green) ![license](https://img.shields.io/badge/license-AGPL--3.0-red)
-
-**Claude Code plugin — Python hooks, MCP tools, and skill commands for enforcement, ops, and security.**
-
-Enforce rules. Query live state. Automate ops. All without a single line burned on instructing Claude in context.
+```bash
+claude plugins install nardovibecoding/claude-security-guard
+```
 
 ---
 
-## Why this exists
+<div align="center">
 
-It started with 41 hookify rules sitting inside Markdown files — pattern-matched, injected into every session, burning tokens before a single word of real work happened. Claude was reading the same rules hundreds of times a day.
+**The most complete enforcement + security layer for Claude Code — hooks that block, tools that know, skills that audit.**
 
-Then came the discovery: hookify is just Python. Those Markdown rules could be real code — code that runs silently, passes or blocks, and costs nothing in context.
+[![hooks](https://img.shields.io/badge/hooks-13-orange?style=for-the-badge)](hooks/)
+[![mcp-tools](https://img.shields.io/badge/mcp--tools-27-blue?style=for-the-badge)](mcp/)
+[![commands](https://img.shields.io/badge/commands-2-green?style=for-the-badge)](commands/)
+[![license](https://img.shields.io/badge/license-AGPL--3.0-red?style=for-the-badge)](LICENSE)
+[![platform](https://img.shields.io/badge/platform-macOS-lightgrey?style=for-the-badge)](#)
 
-The hooks were written. They worked. But they hit a wall: hooks are stateless. They can block a command, but they can't check whether 3 agents are already running. They can't SSH to a VPS. They can't compare a local `.env` against the production one.
-
-That's where the MCP server came in — persistent state, tool calls, real logic. Twenty tools that give Claude live answers instead of instructions it has to remember.
-
-The result got packaged as a plugin. One install. Everything active.
+</div>
 
 ---
 
-## What's inside
+## Security
 
-### Python Hooks (12)
+claude-security-guard runs a multilayer defense stack directly inside Claude Code:
 
-Hooks run silently on every relevant Claude Code action. Zero tokens consumed.
+- **Prompt injection detection** — 30+ patterns across English, Chinese, and Japanese
+- **SSRF protection** — blocks private IP ranges, suspicious TLDs, and homograph attacks
+- **Secret leak scanning** — finds API keys, tokens, passwords, and private keys before they leave your machine
+- **File upload safety** — MIME mismatch detection, double-extension attacks, ClamAV integration
+- **Dependency auditing** — typosquatting detection against known malicious package names
+- **Exfiltration detection** — flags POST requests to unknown domains and file-to-HTTP patterns
+- **Pre-publish audit** — 12-point gate before any `gh repo --visibility public` command runs
+
+Every security check runs as a hook (zero tokens) or an MCP tool call (one tool call). No instructions burned in context.
+
+---
+
+## Architecture
+
+```
+User / Claude Code
+       │
+       ▼
+┌──────────────────────────────────────────────────────┐
+│  HOOKS — the muscle                                  │
+│  Fires on every tool event. Silent. Zero tokens.     │
+│  Blocks bad ops before they execute.                 │
+│  Triggers side-effects (sync, restart, remind).      │
+│  13 hooks across PreToolUse / PostToolUse / Stop     │
+└──────────────────────┬───────────────────────────────┘
+                       │ needs live state
+                       ▼
+┌──────────────────────────────────────────────────────┐
+│  MCP SERVER — the brain                              │
+│  Persistent process. Real answers.                   │
+│  SSH to VPS. Diff configs. Count agents.             │
+│  27 tools across 7 categories.                       │
+└──────────────────────┬───────────────────────────────┘
+                       │ needs multi-step orchestration
+                       ▼
+┌──────────────────────────────────────────────────────┐
+│  SKILL COMMANDS — the personality                    │
+│  User-invoked. Interactive.                          │
+│  Orchestrates hooks + MCP + Claude reasoning.        │
+│  2 commands: /system-check, /md-cleanup              │
+└──────────────────────────────────────────────────────┘
+```
+
+**Rule of thumb:** if it should happen without being asked → hook. If Claude needs a real answer → MCP tool. If the user wants to run a workflow → skill command.
+
+---
+
+## Hooks (13)
+
+Hooks fire automatically on tool events. Zero tokens consumed.
+
+### Enforcement
 
 | Hook | Event | What it does |
 |------|-------|-------------|
-| `guard_safety` | PreToolUse (Bash) | Blocks `rm -rf`, force push, hard reset, manual VPS bot kills |
-| `auto_vps_sync` | PostToolUse (Bash) | Auto-syncs VPS after `git push` — pulls latest on the server |
+| `guard_safety` | PreToolUse (Bash) | Blocks `rm -rf`, force push, hard reset, unauthorized VPS kills |
+| `auto_pre_publish` | PreToolUse (Bash) | 12-point audit gate before any repo goes public: secrets, license, `.gitignore`, artifacts, binaries, NOTICE |
+
+### Ops Automation
+
+| Hook | Event | What it does |
+|------|-------|-------------|
+| `auto_vps_sync` | PostToolUse (Bash) | Auto-pulls latest on VPS after every `git push` |
 | `auto_dependency_grep` | PostToolUse (Bash) | Greps all references after a file move or delete |
-| `auto_license` | PostToolUse (Bash) | After `gh repo create` → sets up license, description, topics |
-| `auto_repo_check` | PostToolUse (Bash) | After push to public repo → reminds to sync README/description |
-| `auto_pip_install` | PostToolUse (Edit/Write) | Auto pip installs on VPS after `requirements.txt` edit |
-| `auto_bot_restart` | PostToolUse (Edit/Write) | Restarts bot on VPS after persona JSON edit |
+| `auto_pip_install` | PostToolUse (Edit/Write) | Auto-installs on VPS after `requirements.txt` edit |
+| `auto_bot_restart` | PostToolUse (Edit/Write) | Restarts bot process on VPS after persona config edit |
 | `auto_restart_process` | PostToolUse (Edit/Write) | Restarts any tracked process after editing its source file |
+
+### GitHub
+
+| Hook | Event | What it does |
+|------|-------|-------------|
+| `auto_license` | PostToolUse (Bash) | After `gh repo create` → sets license, description, topics |
+| `auto_repo_check` | PostToolUse (Bash) | After push to public repo → prompts README/description sync |
+
+### Session & Memory
+
+| Hook | Event | What it does |
+|------|-------|-------------|
 | `auto_skill_sync` | PostToolUse (Edit/Write) | Reminds to sync skills after `SKILL.md` edit |
 | `auto_memory_index` | PostToolUse (Edit/Write) | Checks if new memory file is indexed in `MEMORY.md` |
 | `auto_context_checkpoint` | UserPromptSubmit | Auto-triggers checkpoint at 20% context intervals |
-| `auto_content_remind` | Stop | Before session ends → prompts to save content-worthy moments |
-| `auto_pre_publish` | PreToolUse (Bash) | Blocks `gh repo --visibility public` until 12-point audit passes: secrets, license, .gitignore, artifacts, binaries, NOTICE |
+| `auto_content_remind` | Stop | Before session ends → prompts to save tweet-worthy moments |
 
-### MCP Tools (20)
+---
 
-Tools give Claude stateful, live answers. No hallucinating from memory.
+## MCP Tools (27)
+
+Claude calls these directly. Live answers, no hallucinating from memory.
+
+### Enforcement
 
 | Tool | What it does |
 |------|-------------|
-| `agent_count` | How many background agents are running — call before spawning |
-| `vps_status` | VPS reachability, bot processes, last git commit, uptime |
-| `config_diff` | Compare Mac `.env` vs VPS `.env` — find mismatched keys |
-| `dependency_scan` | Grep references to any file/function across codebase + memory |
-| `context_budget` | Live token count across all MD-based context sources |
+| `agent_count` | How many background agents are running — check before spawning |
+| `dependency_scan` | Grep references to any file or function across codebase + memory |
 | `post_task_check` | Check session actions against known improvement patterns |
-| `session_log` | Log an action or query the session log |
-| `content_capture` | Save a tweet-worthy moment to the running draft log |
-| `repo_sync_check` | Compare local skills/hooks vs GitHub repo — find drift |
-| `github_readme_sync` | Generate updated README tables from local skills/hooks inventory |
-| `content_queue` | Manage tweet draft queue — add, list, pop next |
-| `github_metadata` | Get or set GitHub repo description and topics |
-| `github_changelog` | Extract git log into structured changelog by category |
-| `session_checkpoint` | Save session state at context 20%/40%/60% or before `/clear` |
-| `session_transfer` | Transfer Claude Code session Mac → phone via Telegram |
-| `session_id` | Return current session ID for resuming elsewhere |
-| `set_reminder` | Set a timed alert in the terminal (`16:55` or `30m` or `2h`) |
-| `indicator_switch` | Switch voice indicator between menubar and floating dot |
+
+### Ops
+
+| Tool | What it does |
+|------|-------------|
+| `vps_status` | VPS reachability, bot processes, last git commit, uptime |
+| `config_diff` | Compare local `.env` vs VPS `.env` — find mismatched keys |
 | `sync_status` | Full sync state: GitHub ↔ Mac ↔ VPS ↔ templates in one call |
-| `voice_control` | Lock/unlock voice, mute/unmute TTS, check voice system status |
+| `set_reminder` | Set a timed alert in the terminal (`16:55`, `30m`, `2h`) |
+
+### Security
+
+| Tool | What it does |
+|------|-------------|
 | `content_sanitize` | Scan text for 30+ prompt injection patterns (EN/CN/JP) |
 | `url_check` | SSRF protection — block private IPs, suspicious TLDs, homograph attacks |
 | `file_scan` | MIME mismatch, double extensions, suspicious code patterns, ClamAV |
@@ -78,45 +143,49 @@ Tools give Claude stateful, live answers. No hallucinating from memory.
 | `exfil_detect` | Detect data exfiltration — POST to unknown domains, file→HTTP patterns |
 | `image_metadata` | Image type verification, embedded scripts, GPS data, EXIF analysis |
 
-### Skill Commands (2)
+### Content
 
-Slash commands for interactive audits.
+| Tool | What it does |
+|------|-------------|
+| `content_capture` | Save a tweet-worthy moment to the running draft log |
+| `content_queue` | Manage tweet draft queue — add, list, pop next |
 
-| Command | What it does |
-|---------|-------------|
-| `/md-cleanup` | 5-phase context budget auditor — CLAUDE.md, hookify rules, memory, skills. Token savings report + exec on approval. |
-| `/system-check` | Full health check — Mac + VPS processes, MCP servers, cron jobs, disk, memory, cookies. Clean status table. |
+### Session
+
+| Tool | What it does |
+|------|-------------|
+| `session_log` | Log an action or query the session log |
+| `session_checkpoint` | Save session state at 20%/40%/60% context or before `/clear` |
+| `session_transfer` | Transfer Claude Code session Mac → phone via Telegram |
+| `session_id` | Return current session ID for resuming elsewhere |
+| `context_budget` | Live token count across all MD-based context sources |
+
+### GitHub
+
+| Tool | What it does |
+|------|-------------|
+| `repo_sync_check` | Compare local skills/hooks vs GitHub repo — find drift |
+| `github_readme_sync` | Generate updated README tables from local inventory |
+| `github_metadata` | Get or set GitHub repo description and topics |
+| `github_changelog` | Extract git log into structured changelog by category |
+
+### Voice
+
+| Tool | What it does |
+|------|-------------|
+| `voice_control` | Lock/unlock voice, mute/unmute TTS, check voice system status |
+| `indicator_switch` | Switch voice indicator between menubar and floating dot |
 
 ---
 
-## Architecture
+## Skill Commands (2)
 
-Three layers, each doing what it does best:
+User-invoked slash commands for interactive audits.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  HOOKS — the muscle                                         │
-│  Runs on every tool call. Silent. Zero tokens.              │
-│  Blocks bad ops before they happen.                         │
-│  Auto-triggers side effects (sync, restart, remind).        │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ can't do stateful queries
-┌──────────────────────▼──────────────────────────────────────┐
-│  MCP SERVER — the brain                                     │
-│  Persistent process. Live answers.                          │
-│  SSH to VPS. Read real state. Compare real data.            │
-│  Claude calls tools instead of guessing from memory.        │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ can't drive multi-step audits
-┌──────────────────────▼──────────────────────────────────────┐
-│  SKILL COMMANDS — the personality                           │
-│  Interactive, user-invoked.                                 │
-│  Orchestrate hooks + MCP + Claude reasoning together.       │
-│  Context audits, health checks, multi-phase workflows.      │
-└─────────────────────────────────────────────────────────────┘
-```
-
-Hooks are muscle: they fire automatically and enforce without asking. MCP is the brain: it holds state and returns facts. Skills are the personality: they run multi-step workflows that combine both.
+| Command | What it does |
+|---------|-------------|
+| `/system-check` | Full health check — Mac + VPS processes, MCP servers, cron jobs, disk, memory, cookies. Clean status table. |
+| `/md-cleanup` | 5-phase context budget auditor — CLAUDE.md, hookify rules, memory, skills. Token savings report + exec on approval. |
 
 ---
 
@@ -126,13 +195,26 @@ Hooks are muscle: they fire automatically and enforce without asking. MCP is the
 claude plugins install nardovibecoding/claude-security-guard
 ```
 
-The plugin registers hooks, starts the MCP server, and makes the skill commands available — one command.
+One command. Registers all hooks, starts the MCP server, activates skill commands.
 
 ---
 
-## Skills vs Hooks vs MCP
+## Configuration
 
-Understanding when each layer does the work:
+Create a `.env` file in the plugin root:
+
+```env
+VPS_HOST=your.vps.hostname
+VPS_USER=your_ssh_user
+TELEGRAM_BOT_TOKEN_ADMIN=...   # optional — for session_transfer
+ADMIN_USER_ID=...              # optional — for session_transfer
+```
+
+The MCP server reads this on startup via `mcp/vps.py`.
+
+---
+
+## Layer Comparison
 
 | | Hooks | MCP Tools | Skill Commands |
 |---|---|---|---|
@@ -143,22 +225,25 @@ Understanding when each layer does the work:
 | **SSH / network** | Yes (PostToolUse) | Yes | Via MCP |
 | **Best for** | Enforcement, auto side-effects | Live queries, comparisons | Interactive audits, workflows |
 
-Rule of thumb: if it should happen without being asked, it's a hook. If Claude needs to know something real, it's an MCP tool. If the user wants to run a workflow, it's a skill.
+---
+
+## Why It Exists
+
+It started with 41 rules sitting in Markdown files — pattern-matched, injected into every session, burning tokens before a single word of real work happened. Claude was reading the same rules hundreds of times a day.
+
+Hooks replaced the rules. They run silently, pass or block, and cost nothing in context. But hooks are stateless — they can't check whether 3 agents are already running, SSH to a server, or compare two config files.
+
+That's where the MCP server came in: persistent state, tool calls, real answers instead of instructions Claude has to remember.
+
+The security layer came last — prompt injection, SSRF, secret scanning, and exfiltration detection running at the hook and tool layer, not burned into a system prompt.
+
+The result got packaged as a plugin. One install. Everything active.
 
 ---
 
-## Configuration
+## Star History
 
-Create a `.env` file in the plugin root (or set environment variables):
-
-```env
-VPS_HOST=your.vps.ip
-VPS_USER=your_ssh_user
-TELEGRAM_BOT_TOKEN_ADMIN=...   # optional — for session_transfer
-ADMIN_USER_ID=...              # optional — for session_transfer
-```
-
-The MCP server reads this via `mcp/vps.py:load_env()`.
+[![Star History Chart](https://api.star-history.com/svg?repos=nardovibecoding/claude-security-guard&type=Date)](https://star-history.com/#nardovibecoding/claude-security-guard&Date)
 
 ---
 
