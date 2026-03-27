@@ -152,9 +152,40 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
     except Exception:
         pass
 
+    # --- README quality checks (block) ---
+
+    # 10. README exists, has substance, and key sections
+    readme = repo_path / "README.md"
+    if not readme.exists():
+        issues.append("MISSING: README.md")
+    else:
+        readme_text = readme.read_text()
+        readme_lines = readme_text.splitlines()
+        readme_lower = readme_text.lower()
+
+        if len(readme_lines) < 20:
+            issues.append(f"README: only {len(readme_lines)} lines — won't pass stranger test")
+
+        # Must have install/usage section
+        if not re.search(r'##\s*(install|setup|getting started|quick start)', readme_lower):
+            issues.append("README: no install/setup section — strangers won't know how to use it")
+
+        # Must have description in first 10 lines (what does it do?)
+        first_10 = "\n".join(readme_lines[:10])
+        if len(first_10.strip()) < 50:
+            issues.append("README: first 10 lines too thin — needs a clear one-line description")
+
+        # Should have code examples
+        if "```" not in readme_text:
+            warnings.append("README: no code blocks — add usage examples")
+
+        # Should have a license section or badge
+        if "license" not in readme_lower:
+            warnings.append("README: no license mention — add badge or section")
+
     # --- LOW checks (warn) ---
 
-    # 10. No large binaries (>1MB)
+    # 11. No large binaries (>1MB)
     for f in tracked:
         try:
             if f.stat().st_size > 1_000_000:
@@ -162,16 +193,7 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
         except Exception:
             pass
 
-    # 10. README exists and has substance
-    readme = repo_path / "README.md"
-    if not readme.exists():
-        issues.append("MISSING: README.md")
-    else:
-        lines = readme.read_text().splitlines()
-        if len(lines) < 20:
-            warnings.append(f"README: only {len(lines)} lines — may not pass stranger test")
-
-    # 11. Copyright headers in .py files
+    # 12. Copyright headers in .py files
     py_files = [f for f in tracked if f.suffix == '.py']
     missing_headers = []
     for f in py_files:
@@ -183,6 +205,11 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
             pass
     if missing_headers:
         warnings.append(f"COPYRIGHT: {len(missing_headers)} .py files missing headers: {', '.join(missing_headers[:5])}")
+
+    # 13. Demo GIF or screenshot in README
+    if readme.exists():
+        if not re.search(r'\.(gif|mp4|png|jpg|jpeg|webp)', readme_text, re.IGNORECASE):
+            warnings.append("README: no demo GIF or screenshot — visual demos boost adoption")
 
     # --- Build result ---
     if issues:
