@@ -1,0 +1,6 @@
+[project]
+name = "ops-guard-mcp"
+version = "0.1.0"
+description = "Claude Code ops-guard MCP server — stateful queries for enforcement"
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.0.0"]

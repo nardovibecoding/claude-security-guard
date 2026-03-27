@@ -1,0 +1,7 @@
+{
+  "name": "claude-ops-guard",
+  "version": "1.0.0",
+  "description": "Enforcement + ops automation for Claude Code — Python hooks, MCP server, system management",
+  "author": "nardovibecoding",
+  "license": "AGPL-3.0"
+}
