@@ -10,8 +10,8 @@ claude plugins install nardovibecoding/claude-security-guard
 
 **The most complete enforcement + security layer for Claude Code — hooks that block, tools that know, skills that audit.**
 
-[![hooks](https://img.shields.io/badge/hooks-12-orange?style=for-the-badge)](hooks/)
-[![mcp-tools](https://img.shields.io/badge/mcp--tools-27-blue?style=for-the-badge)](mcp/)
+[![hooks](https://img.shields.io/badge/hooks-14-orange?style=for-the-badge)](hooks/)
+[![mcp-tools](https://img.shields.io/badge/mcp--tools-28-blue?style=for-the-badge)](mcp/)
 [![commands](https://img.shields.io/badge/commands-2-green?style=for-the-badge)](commands/)
 [![license](https://img.shields.io/badge/license-AGPL--3.0-red?style=for-the-badge)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-macOS-lightgrey?style=for-the-badge)](#)
@@ -45,7 +45,7 @@ User / Claude Code
 │  Fires on every tool event. Silent. Zero tokens.     │
 │  Blocks bad ops before they execute.                 │
 │  Triggers side-effects (sync, restart, remind).      │
-│  13 hooks across PreToolUse / PostToolUse / Stop     │
+│  14 hooks across PreToolUse / PostToolUse / Stop     │
 └──────────────────────┬───────────────────────────────┘
                        │ needs live state
                        ▼
@@ -53,7 +53,7 @@ User / Claude Code
 │  MCP SERVER — the brain                              │
 │  Persistent process. Real answers.                   │
 │  SSH to VPS. Diff configs. Count agents.             │
-│  27 tools across 7 categories.                       │
+│  28 tools across 7 categories.                       │
 └──────────────────────┬───────────────────────────────┘
                        │ needs multi-step orchestration
                        ▼
@@ -69,7 +69,7 @@ User / Claude Code
 
 ---
 
-## Hooks (13)
+## Hooks (14)
 
 Hooks fire automatically on tool events. Zero tokens consumed.
 
@@ -77,7 +77,9 @@ Hooks fire automatically on tool events. Zero tokens consumed.
 
 | Hook | Event | What it does |
 |------|-------|-------------|
-| `guard_safety` | PreToolUse (Bash) | Blocks `rm -rf`, force push, hard reset, unauthorized VPS kills |
+| `guard_safety` | PreToolUse (Bash) | Blocks `rm -rf`, force push, hard reset, unauthorized VPS kills. Also: hook self-protection (blocks editing `~/.claude/hooks/`), credential dir read guard (`~/.ssh/`, `~/.aws/`), compound bash decomposition, `--no-verify` detection |
+| `auto_scan_output` | PostToolUse (Read/Bash/WebFetch) | Scans tool output for prompt injection patterns before it reaches Claude's context |
+| `canary_guard` | PreToolUse | Trip-wire detection — blocks any access to `SECURITY_CANARY` files |
 
 ### Ops Automation
 
@@ -107,7 +109,7 @@ Hooks fire automatically on tool events. Zero tokens consumed.
 
 ---
 
-## MCP Tools (27)
+## MCP Tools (28)
 
 Claude calls these directly. Live answers, no hallucinating from memory.
 
@@ -118,6 +120,7 @@ Claude calls these directly. Live answers, no hallucinating from memory.
 | `agent_count` | How many background agents are running — check before spawning |
 | `dependency_scan` | Grep references to any file or function across codebase + memory |
 | `post_task_check` | Check session actions against known improvement patterns |
+| `audit_query` | Query the persistent JSONL audit log by date, action type, or hook name |
 
 ### Ops
 
