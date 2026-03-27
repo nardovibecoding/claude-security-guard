@@ -9,7 +9,6 @@ Intercepts:
 Runs 12 checks: secrets, license, gitignore, artifacts, binaries, NOTICE, copyright headers.
 """
 import json
-import os
 import re
 import subprocess
 import sys
@@ -32,7 +31,7 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
     cmd = tool_input.get("command", "")
 
     # Find repo path from command or cwd
-    repo_path = _find_repo_path(cmd)
+    repo_path = _find_repo_path()
     if not repo_path or not repo_path.exists():
         return {"decision": "block", "reason": "Could not determine repo path. cd into the repo first."}
 
@@ -86,7 +85,6 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
             continue
         for pattern, desc in personal_patterns:
             if re.search(pattern, content):
-                # Allow in .gitignore and LICENSE
                 if f.name not in ('.gitignore', 'LICENSE', 'NOTICE'):
                     issues.append(f"PERSONAL: {desc} in {f.name}")
                     break
@@ -134,9 +132,29 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
             issues.append(f"ARTIFACT: __pycache__ committed at {f.relative_to(repo_path)}")
             break
 
-    # --- MEDIUM checks (warn) ---
+    # --- MEDIUM checks (block) ---
 
-    # 9. No large binaries (>1MB)
+    # 9. GitHub description and topics (if repo exists on GitHub)
+    repo_name = repo_path.name
+    try:
+        r = subprocess.run(
+            ["gh", "repo", "view", f"nardovibecoding/{repo_name}", "--json", "description,repositoryTopics"],
+            capture_output=True, text=True, timeout=10
+        )
+        if r.returncode == 0:
+            import json as _json
+            meta = _json.loads(r.stdout)
+            if not meta.get("description"):
+                issues.append("GITHUB: no description set — invisible in search")
+            topics = meta.get("repositoryTopics", [])
+            if not topics:
+                issues.append("GITHUB: no topics set — poor discoverability")
+    except Exception:
+        pass
+
+    # --- LOW checks (warn) ---
+
+    # 10. No large binaries (>1MB)
     for f in tracked:
         try:
             if f.stat().st_size > 1_000_000:
@@ -183,15 +201,13 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
         msg = "PRE-PUBLISH AUDIT PASSED with warnings:\n"
         for w in warnings:
             msg += f"  - {w}\n"
-        # Allow but warn
         return {"decision": "allow", "reason": msg}
 
     return {"decision": "allow", "reason": "Pre-publish audit passed. All clear."}
 
 
-def _find_repo_path(cmd: str) -> Path | None:
-    """Try to find the repo root from the command or cwd."""
-    # Check if we're in a git repo
+def _find_repo_path() -> Path | None:
+    """Try to find the repo root from cwd."""
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
