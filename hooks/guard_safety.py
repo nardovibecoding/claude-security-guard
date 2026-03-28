@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
-"""PreToolUse hook: block destructive ops, VPS direct access, hook tampering, credential reads, git hook bypass."""
+# Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE
+"""PreToolUse hook: block destructive ops, VPS direct access, hook tampering, credential reads, git hook bypass, branch creation."""
 import re
 import sys
 from pathlib import Path
@@ -41,6 +41,8 @@ _BASH_DENY = re.compile(
     r"grep\s+-v\s+\$\$|pgrep.*grep.*\$\$|"
     # Agent git push (#13)
     r"Agent.*git\s+push|agent.*push.*origin|"
+    # Branch creation (#14) — force all commits to main
+    r"git\s+(checkout\s+-b|switch\s+-c|branch\s+(?!-[dD]))|"
     # P1 #5 — block --no-verify / --no-gpg-sign on git commands
     r"git\s+(commit|push)\s+.*--no-verify|--no-verify\s+.*git\s+(commit|push)|"
     r"git\s+(commit|push)\s+.*--no-gpg-sign|--no-gpg-sign\s+.*git\s+(commit|push)"
@@ -54,7 +56,6 @@ def _check_hook_path(path_str):
     """P0 #1: Return True if path targets security hooks directory."""
     if not path_str:
         return False
-    # Normalize: expand ~ and resolve
     expanded = path_str.replace("~", _HOME)
     return "/.claude/hooks/" in expanded or ".claude/hooks/" in expanded
 
@@ -76,7 +77,6 @@ def _check_credential_read(path_str):
 
 def _check_bash_cmd(cmd):
     """P0 #3: Decompose compound bash commands and check each sub-command."""
-    # Split on &&, ||, ;, |, $(, backticks
     sub_commands = _CMD_SPLIT.split(cmd)
     for sub in sub_commands:
         sub = sub.strip()
@@ -98,7 +98,7 @@ def check(tool_name, tool_input, input_data):
         if _check_credential_read(path):
             return "credential_read"
 
-    # Bash checks (P0 #3 compound decomposition + P1 #5 --no-verify)
+    # Bash checks (P0 #3 compound decomposition + P1 #5 --no-verify + #14 branch)
     if tool_name == "Bash":
         cmd = tool_input.get("command", "")
         if _check_bash_cmd(cmd):
@@ -108,14 +108,13 @@ def check(tool_name, tool_input, input_data):
 
 
 def action(tool_name, tool_input, input_data):
-    return None  # Block via deny, message in hookSpecificOutput
+    return None
 
 
-# --- Reason messages per check type ---
 _REASONS = {
     "hook_protect": "Blocked: cannot modify security hooks. This protects against prompt injection disabling the security layer.",
     "credential_read": "Blocked: reading credential directories is restricted.",
-    "bash_deny": None,  # uses command-specific message
+    "bash_deny": None,
 }
 
 
@@ -127,7 +126,6 @@ def check_and_deny(tool_name, tool_input, input_data):
 
     reason = _REASONS.get(result)
 
-    # For bash denies, check for specific sub-reasons
     if result == "bash_deny":
         cmd = tool_input.get("command", "")
         if re.search(r"--no-verify|--no-gpg-sign", cmd):

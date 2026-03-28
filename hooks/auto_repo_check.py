@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 """PostToolUse hook: after git push to public repos → remind to check README/description sync."""
 import json
 import re
@@ -10,8 +9,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from hook_base import run_hook
 
 
-# Repos that are public and should have up-to-date READMEs
-PUBLIC_REPOS = {"claude-curated", "ops-guard-mcp", "security-shield-mcp", "linkedin-autosloth"}
+# Auto-detect: any repo under <github-user> is public and should have up-to-date READMEs
+# No hardcoded list — checks the git remote URL instead
+PUBLIC_ORG = "<github-user>"
 
 
 def check(tool_name, tool_input, input_data):
@@ -34,15 +34,12 @@ def action(tool_name, tool_input, input_data):
     except Exception:
         return None
 
-    # Check if it's one of our public repos
-    repo_name = None
-    for name in PUBLIC_REPOS:
-        if name in remote_url:
-            repo_name = name
-            break
+    # Check if it's one of our public repos (any repo under <github-user>)
+    if PUBLIC_ORG not in remote_url:
+        return None  # Not our org, skip
 
-    if not repo_name:
-        return None  # Private repo or unknown, skip
+    # Extract repo name from URL
+    repo_name = remote_url.rstrip("/").split("/")[-1].replace(".git", "")
 
     # Check if README exists and has recent changes
     readme = Path(cwd or ".") / "README.md"

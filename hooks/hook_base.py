@@ -1,4 +1,3 @@
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 """Base class for PostToolUse hooks. Reads JSON from stdin, routes to handler."""
 import json
 import os

@@ -1,0 +1,11 @@
+{
+  "_comment": "Single source of truth for platform-specific hook filtering. Used by deploy_hooks.sh and auto_hook_deploy.py.",
+  "mac_only": [
+    "auto_pre_publish.py",
+    "auto_skill_sync.py",
+    "cookie_health.py",
+    "auto_context_checkpoint.py",
+    "temp_file_guard.py"
+  ],
+  "vps_only": []
+}
