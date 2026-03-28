@@ -195,11 +195,13 @@ User-invoked slash commands for interactive audits.
 
 ## Install
 
+One command. Takes 30 seconds.
+
 ```bash
-claude plugins install nardovibecoding/claude-security-guard
+curl -fsSL https://raw.githubusercontent.com/nardovibecoding/claude-security-guard/main/install.sh | bash
 ```
 
-One command. Registers all hooks, starts the MCP server, activates skill commands.
+Clones the repo, registers 14 hooks + MCP server in `~/.claude/settings.json`, optionally configures VPS. Restart Claude Code.
 
 ---
 
