@@ -104,6 +104,12 @@ _DEPENDENCY_MAP = {
     "auto_review_before_done.py": [
         "PUBLIC: claude-security-guard — run sync_public_repos.py",
     ],
+    # Content — never hardcode repo stats in memory/tweets
+    "sync_public_repos.py": [
+        "memory/reference_github_repos.md (don't hardcode counts)",
+        "memory/project_ops_guard_plugin.md (don't hardcode counts)",
+        "content_drafts/ (check queued tweets for stale numbers)",
+    ],
 }
 
 

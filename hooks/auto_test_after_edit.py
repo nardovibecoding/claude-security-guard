@@ -61,6 +61,20 @@ _MODEL_PATTERNS = [
 ]
 
 
+def check_hook_reload(file_path: Path):
+    """Warn user to /clear if a hook file was edited."""
+    hooks_dir = Path.home() / ".claude" / "hooks"
+    if file_path.parent == hooks_dir or (
+        str(file_path).startswith(str(_PROJECT / "hooks"))
+        and file_path.suffix == ".py"
+    ):
+        return (
+            "⚠️  Hook file edited — run /clear or start a new session "
+            "to pick up changes. Hooks are loaded once at session start."
+        )
+    return None
+
+
 def check_hardcoded_models(file_path: Path):
     """Warn if a non-llm_client file hardcodes model names."""
     if file_path.name == "llm_client.py":
@@ -84,7 +98,12 @@ def check_python(file_path: Path):
     """Syntax check + ruff lint + mypy types + optional pytest."""
     results = []
 
-    # 0. Hardcoded model name check
+    # 0. Hook reload nudge
+    hook_warn = check_hook_reload(file_path)
+    if hook_warn:
+        results.append(hook_warn)
+
+    # 0b. Hardcoded model name check
     model_warn = check_hardcoded_models(file_path)
     if model_warn:
         results.append(model_warn)

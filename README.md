@@ -10,7 +10,7 @@ claude plugins install nardovibecoding/claude-security-guard
 
 **The most complete enforcement + security layer for Claude Code — hooks that block, tools that know, skills that audit.**
 
-[![hooks](https://img.shields.io/badge/hooks-16-orange?style=for-the-badge)](hooks/)
+[![hooks](https://img.shields.io/badge/hooks-32-orange?style=for-the-badge)](hooks/)
 [![mcp-tools](https://img.shields.io/badge/mcp--tools-28-blue?style=for-the-badge)](mcp/)
 [![commands](https://img.shields.io/badge/commands-2-green?style=for-the-badge)](commands/)
 [![license](https://img.shields.io/badge/license-AGPL--3.0-red?style=for-the-badge)](LICENSE)
@@ -71,7 +71,7 @@ User / Claude Code
 
 ---
 
-## Hooks (14)
+## Hooks (32)
 
 Hooks fire automatically on tool events. Zero tokens consumed.
 

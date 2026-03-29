@@ -164,6 +164,15 @@ def main():
         sys.exit(0)
 
     edited_files = list(dict.fromkeys(e["file"] for e in edits))
+
+    # Skip review for memory/docs-only edits (no code changes)
+    code_edits = [f for f in edited_files
+                  if not ("/memory/" in f or f.endswith("MEMORY.md")
+                          or f.endswith("task_plan.md")
+                          or f.endswith("progress.md")
+                          or f.endswith("findings.md"))]
+    if not code_edits:
+        sys.exit(0)
     file_list = "\n".join(f"  - {f}" for f in edited_files)
 
     # Layer 1: Logic review checklist
@@ -194,7 +203,7 @@ Before reporting complete, verify each change:
         output += f"+------------------------------------------------------+\n\n"
         output += test_msg
 
-    print(output)
+    print(output, file=sys.stderr)
 
     # Clear the edit log
     try:
