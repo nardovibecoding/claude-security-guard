@@ -60,7 +60,11 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
             content = f.read_text(errors='replace')
         except Exception:
             continue
+        # Skip IP checks in test files — they intentionally contain fake IPs as fixtures
+        is_test_file = f.name.startswith("test_") or "_test.py" in f.name or "/tests/" in str(f)
         for pattern, desc in secret_patterns:
+            if desc == "Hardcoded IP address" and is_test_file:
+                continue
             matches = re.findall(pattern, content)
             for match in matches:
                 # Skip common false positives
