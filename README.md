@@ -20,6 +20,8 @@ claude plugins install nardovibecoding/claude-security-guard
 
 </div>
 
+Claude Code does exactly what you tell it — including force-push to main, commit your `.env`, or run `rm -rf` on a production directory. There's no enforcement layer by default. This adds one.
+
 ---
 
 ## Security
