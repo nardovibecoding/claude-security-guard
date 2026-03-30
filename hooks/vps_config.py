@@ -5,11 +5,8 @@ from pathlib import Path
 
 
 def _load_env():
-    """Load .env file from DOTENV_PATH env var without external dependencies."""
-    dotenv_path = os.environ.get("DOTENV_PATH", "")
-    if not dotenv_path:
-        return
-    env_path = Path(dotenv_path)
+    """Load .env file without external dependencies."""
+    env_path = Path.home() / "telegram-claude-bot" / ".env"
     if not env_path.exists():
         return
     for line in env_path.read_text().splitlines():
@@ -27,4 +24,4 @@ VPS_HOST = os.environ.get("VPS_HOST", "")
 VPS_USER = os.environ.get("VPS_USER", "")
 VPS_CLIPBOARD_PORT = os.environ.get("VPS_CLIPBOARD_PORT", "8888")
 VPS_SSH = f"{VPS_USER}@{VPS_HOST}"
-VPS_REPO = os.environ.get("VPS_REPO", "")
+VPS_REPO = "~/telegram-claude-bot"

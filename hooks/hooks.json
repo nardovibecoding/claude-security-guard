@@ -1,6 +1,23 @@
 {
-  "description": "ops-guard hooks — safety blocks, auto-sync, auto-restart, context checkpoint",
+  "description": "claude-sec-ops-guard — security enforcement, opsec scanning, and ops automation",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/cookie_health.py",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/cron_log_monitor.py",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash|Write|Edit|Read",
@@ -13,6 +30,41 @@
           {
             "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/canary_guard.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/file_lock.py",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/api_key_lookup.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_pre_publish.py",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/skill_disable_not_delete.py",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/tg_qr_document.py",
             "timeout": 3000
           }
         ]
@@ -30,33 +82,38 @@
         ]
       },
       {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_vps_sync.py",
-            "timeout": 15000
-          },
-          {
-            "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_dependency_grep.py",
-            "timeout": 10000
-          },
-          {
-            "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_license.py",
-            "timeout": 15000
-          },
-          {
-            "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_repo_check.py",
-            "timeout": 5000
-          }
-        ]
-      },
-      {
         "matcher": "Edit|Write",
         "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/file_unlock.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/tg_security_guard.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/tg_api_guard.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/admin_only_guard.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/reasoning_leak_canary.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/reddit_api_block.py",
+            "timeout": 3000
+          },
           {
             "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_pip_install.py",
@@ -79,7 +136,32 @@
           },
           {
             "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_hook_deploy.py",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/mcp_server_restart.py",
+            "timeout": 15000
+          },
+          {
+            "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_memory_index.py",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_vps_sync.py",
+            "timeout": 15000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/verify_infra.py",
             "timeout": 5000
           }
         ]
@@ -105,6 +187,11 @@
             "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/auto_content_remind.py",
             "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/memory_auto_commit.py",
+            "timeout": 10000
           }
         ]
       }

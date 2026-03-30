@@ -17,9 +17,21 @@ def check(tool_name, tool_input, input_data):
 
 def action(tool_name, tool_input, input_data):
     ok, out = ssh_cmd(f"cd {VPS_REPO} && git fetch origin && git reset --hard origin/main")
-    if ok:
-        return f"VPS auto-synced after git push. HEAD: {out[-40:] if out else 'ok'}"
-    return f"VPS sync FAILED: {out}"
+    msg = f"VPS auto-synced after git push." if ok else f"VPS sync FAILED: {out}"
+
+    # Auto-sync public repos if publishable files were pushed
+    import subprocess
+    from pathlib import Path
+    sync_script = Path.home() / "telegram-claude-bot" / "scripts" / "sync_public_repos.py"
+    if sync_script.exists():
+        r = subprocess.run(
+            ["python3", str(sync_script), "--sync"],
+            capture_output=True, text=True, timeout=30)
+        synced = r.stdout.count("COPIED")
+        if synced:
+            msg += f" Public repos: {synced} files synced."
+
+    return msg
 
 
 if __name__ == "__main__":

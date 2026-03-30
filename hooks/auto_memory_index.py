@@ -6,9 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
 from hook_base import run_hook
 
-import glob as _glob
-_memory_dirs = _glob.glob(str(Path.home() / ".claude/projects/*/memory/MEMORY.md"))
-MEMORY_DIR = Path(_memory_dirs[0]).parent if _memory_dirs else Path.home() / ".claude/projects/default/memory"
+MEMORY_DIR = Path.home() / ".claude" / "projects" / f"-Users-{Path.home().name}" / "memory"
 INDEX = MEMORY_DIR / "MEMORY.md"
 
 

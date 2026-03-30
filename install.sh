@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Claude Security Guard — one-liner installer
-# curl -fsSL https://raw.githubusercontent.com/nardovibecoding/claude-security-guard/main/install.sh | bash
+# curl -fsSL https://raw.githubusercontent.com/nardovibecoding/claude-sec-ops-guard/main/install.sh | bash
 set -euo pipefail
 
-INSTALL_DIR="$HOME/claude-security-guard"
+INSTALL_DIR="$HOME/claude-sec-ops-guard"
 SETTINGS="$HOME/.claude/settings.json"
 
 RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' CYAN='\033[0;36m' BOLD='\033[1m' NC='\033[0m'
@@ -32,7 +32,7 @@ else
     exit 1
   fi
   echo -e "${GREEN}→ Cloning repository...${NC}"
-  git clone https://github.com/nardovibecoding/claude-security-guard.git "$INSTALL_DIR"
+  git clone https://github.com/nardovibecoding/claude-sec-ops-guard.git "$INSTALL_DIR"
 fi
 
 # --- Install MCP dependencies ---
@@ -60,7 +60,7 @@ mkdir -p "$HOME/.claude"
 python3 << 'PYEOF'
 import json, os
 
-INSTALL_DIR = os.path.expanduser("~/claude-security-guard")
+INSTALL_DIR = os.path.expanduser("~/claude-sec-ops-guard")
 SETTINGS = os.path.expanduser("~/.claude/settings.json")
 
 if os.path.exists(SETTINGS):
@@ -70,7 +70,7 @@ else:
     settings = {}
 
 hooks = settings.setdefault("hooks", {})
-MARKER = "claude-security-guard"
+MARKER = "claude-sec-ops-guard"
 
 HOOK_DEFS = {
     "PreToolUse": [

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 """
 auto_hook_deploy.py — PostToolUse hook (Edit|Write)
 When a file in telegram-claude-bot/hooks/ is edited, auto-deploy it
@@ -17,18 +18,18 @@ from pathlib import Path
 REPO_HOOKS = Path.home() / "telegram-claude-bot" / "hooks"
 TARGET_HOOKS = Path.home() / ".claude" / "hooks"
 
-# Read Mac-only hooks from shared JSON (single source of truth)
-_FILTER_FILE = Path(__file__).parent / "platform_filter.json"
-try:
-    import json as _json
-    MAC_ONLY = set(_json.load(open(_FILTER_FILE))["mac_only"])
-except Exception:
-    MAC_ONLY = set()
+# Mac-only hooks that should not deploy on Linux
+MAC_ONLY = {
+    "auto_pre_publish.py",
+    "auto_skill_sync.py",
+    "cookie_health.py",
+    "auto_context_checkpoint.py",
+}
 
 # Patterns that suggest hardcoded paths (should use ~ or Path.home())
 BAD_PATTERNS = [
-    "~/",
-    "~/",
+    f"/Users/{Path.home().name}/",
+    f"/home/{Path.home().name}/",
 ]
 
 
