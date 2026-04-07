@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 """PostToolUse hook: restart MCP servers on VPS after editing their source files."""
 import re
 import sys
@@ -9,9 +8,6 @@ from hook_base import run_hook, ssh_cmd
 
 # Map: path pattern → systemd service name
 MCP_SERVICES = {
-    "xiaohongshu-mcp": "xhs-mcp",
-    "xhs-mcp": "xhs-mcp",
-    "douyin-mcp": "douyin-mcp",
 }
 
 

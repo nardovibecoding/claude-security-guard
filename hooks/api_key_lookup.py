@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 """PreToolUse hook: remind to check reference_api_keys_locations.md before searching for keys."""
 import json
 import re

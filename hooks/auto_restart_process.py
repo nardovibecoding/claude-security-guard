@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 """PostToolUse hook: auto-restart process after editing its source file."""
+import hashlib
 import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from hook_base import run_hook
@@ -44,8 +45,8 @@ RESTART_MAP = {
 
 def _load_vps():
     env_path = Path.home() / "telegram-claude-bot" / ".env"
-    user = ""
-    host = ""
+    user = "bernard"
+    host = "157.180.28.14"
     if env_path.exists():
         for line in env_path.read_text().splitlines():
             if line.startswith("VPS_USER="):
@@ -62,6 +63,26 @@ def check(tool_name, tool_input, input_data):
     return any(pattern in file_path for pattern in RESTART_MAP)
 
 
+_DEBOUNCE_SECONDS = 10
+
+
+def _debounce_ok(cmd: str) -> bool:
+    """Return True if enough time has passed since the last restart with this command."""
+    tag = hashlib.md5(cmd.encode()).hexdigest()[:8]
+    ts_file = f"/tmp/.auto_restart_{tag}.ts"
+    now = time.time()
+    try:
+        with open(ts_file) as f:
+            last = float(f.read().strip())
+        if now - last < _DEBOUNCE_SECONDS:
+            return False
+    except (FileNotFoundError, ValueError):
+        pass
+    with open(ts_file, "w") as f:
+        f.write(str(now))
+    return True
+
+
 def action(tool_name, tool_input, input_data):
     file_path = tool_input.get("file_path", "")
     for pattern, cmd in RESTART_MAP.items():
@@ -70,6 +91,8 @@ def action(tool_name, tool_input, input_data):
                 return None  # no restart needed
             vps = _load_vps()
             cmd = cmd.format(vps=vps)
+            if not _debounce_ok(cmd):
+                return f"Skipped restart for `{pattern}` (debounce: another restart was triggered <{_DEBOUNCE_SECONDS}s ago)."
             subprocess.run(cmd, shell=True, capture_output=True, timeout=10)
             return f"Auto-restarted: `{pattern}` after edit. Process will auto-recover via launchd/start_all.sh."
     return None

@@ -8,9 +8,9 @@ claude plugins install nardovibecoding/claude-sec-ops-guard
 
 <div align="center">
 
-**27 hooks + 28 MCP tools — security enforcement, opsec scanning, and ops automation for Claude Code.**
+**49 hooks + 28 MCP tools — security enforcement, opsec scanning, and ops automation for Claude Code.**
 
-[![hooks](https://img.shields.io/badge/hooks-39-orange?style=for-the-badge)](hooks/)
+[![hooks](https://img.shields.io/badge/hooks-49-orange?style=for-the-badge)](hooks/)
 [![mcp-tools](https://img.shields.io/badge/mcp--tools-28-blue?style=for-the-badge)](mcp/)
 [![license](https://img.shields.io/badge/license-AGPL--3.0-red?style=for-the-badge)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-macOS%20%2B%20Linux-lightgrey?style=for-the-badge)](#)
@@ -31,7 +31,7 @@ MCP server          → persistent state: agent count, VPS status, config diff
 
 ---
 
-## Security Hooks (13)
+## Security Hooks (17)
 
 | Hook | Event | What it does |
 |------|-------|-------------|
@@ -49,10 +49,14 @@ MCP server          → persistent state: agent count, VPS status, config diff
 | `auto_pre_publish.py` | PreToolUse: Bash | Blocks `gh repo visibility public` until all checks pass |
 | `reddit_api_block.py` | PostToolUse: Edit/Write | Blocks Reddit OAuth API usage — use scraping instead |
 | `skill_disable_not_delete.py` | PreToolUse: Bash | Enforces renaming SKILL.md to .disabled instead of deleting |
+| `agent_cascade_guard.py` | PreToolUse: Agent | Prevents agents spawning sub-agents (cascade protection) |
+| `agent_count_guard.py` | PreToolUse: Agent | Blocks >1 agent per turn, requires user approval for more |
+| `agent_simplicity_guard.py` | PreToolUse: Agent | Defaults agents to Haiku unless task complexity justifies Sonnet |
+| `temp_file_guard.py` | PostToolUse: Edit/Write | Warns when code writes to /tmp without proper cleanup |
 
 ---
 
-## Ops Automation Hooks (14)
+## Ops Automation Hooks (20)
 
 | Hook | Event | What it does |
 |------|-------|-------------|
@@ -70,6 +74,12 @@ MCP server          → persistent state: agent count, VPS status, config diff
 | `memory_auto_commit.py` | Stop | Session end → auto-commit changed memory files |
 | `cookie_health.py` | SessionStart | Session start → check MCP health + cookie freshness on VPS |
 | `cron_log_monitor.py` | SessionStart | Session start → check VPS cron logs for recent errors |
+| `agent_tracker.py` | PreToolUse+SubagentStop | Logs agent spawns and completion status across /clear boundaries |
+| `auto_context_exit.py` | Stop | Exits session cleanly when exit_pending marker is set |
+| `context_50_check.py` | UserPromptSubmit | Injects /s reminder when context hits 50% |
+| `dispatcher_pre.py` | PreToolUse | Single dispatcher routing to all PreToolUse hooks (replaces ~15 spawns) |
+| `dispatcher_post.py` | PostToolUse | Single dispatcher routing to all PostToolUse hooks (replaces ~25 spawns) |
+| `pre_compact_save.py` | PreCompact | Saves transcript + reminds to /s before compaction |
 
 ---
 

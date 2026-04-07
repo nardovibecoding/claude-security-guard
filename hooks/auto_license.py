@@ -26,7 +26,7 @@ def action(tool_name, tool_input, input_data):
     license_path = Path(cwd) / "LICENSE"
     if not license_path.exists():
         try:
-            header = "Copyright (c) 2026 Nardo (<github-user>)\n\n"
+            header = "Copyright (c) 2026 Nardo (nardovibecoding)\n\n"
             result = subprocess.run(
                 ["curl", "-sL", "https://www.gnu.org/licenses/agpl-3.0.txt"],
                 capture_output=True, text=True, timeout=10
@@ -54,7 +54,7 @@ def action(tool_name, tool_input, input_data):
     notice_path = Path(cwd) / "NOTICE"
     if not notice_path.exists():
         notice_path.write_text(
-            "This project is maintained by Nardo (@<github-user>).\n"
+            "This project is maintained by Nardo (@nardovibecoding).\n"
             "Licensed under AGPL-3.0. See LICENSE for details.\n"
         )
         done.append("✅ NOTICE")

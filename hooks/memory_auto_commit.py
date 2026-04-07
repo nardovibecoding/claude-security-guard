@@ -1,58 +1,59 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
-"""Stop hook: auto-commit changed memory files when session ends."""
+"""Stop hook: auto-sync and commit changed memory files when session ends."""
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-MEMORY_DIR = Path.home() / ".claude" / "projects" / f"-Users-{Path.home().name}" / "memory"
+# Skip during convos (auto-clear flow)
+_tty = os.environ.get("CLAUDE_TTY_ID", "").strip()
+if Path(f"/tmp/claude_ctx_exit_pending_{_tty}").exists() if _tty else Path("/tmp/claude_ctx_exit_pending").exists():
+    print("{}")
+    sys.exit(0)
+
+MEMORY_SRC = Path.home() / ".claude" / "projects" / f"-Users-{Path.home().name}" / "memory"
+BOT_REPO = Path.home() / "telegram-claude-bot"
+MEMORY_DST = BOT_REPO / "memory"
+
+
+def run(cmd, **kwargs):
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=15, **kwargs)
 
 
 def main():
     try:
-        input_data = json.load(sys.stdin)
+        json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
+        pass
+
+    if not MEMORY_SRC.exists() or not BOT_REPO.exists():
         print("{}")
         return
 
-    if not MEMORY_DIR.exists():
+    # Rsync memory from ~/.claude/ to telegram-claude-bot/memory/
+    run(["rsync", "-a", "--delete",
+         str(MEMORY_SRC) + "/",
+         str(MEMORY_DST) + "/"])
+
+    # Check for changes in bot repo memory/
+    diff = run(["git", "status", "--porcelain", "memory/"], cwd=BOT_REPO)
+    changed_lines = [l for l in diff.stdout.strip().splitlines() if l.strip()]
+
+    if not changed_lines:
         print("{}")
         return
 
-    # Check for uncommitted memory changes
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(MEMORY_DIR.parent.parent.parent), "diff", "--name-only", "memory/"],
-            capture_output=True, text=True, timeout=5, cwd=str(MEMORY_DIR.parent)
-        )
-        changed = result.stdout.strip()
+    # Count files
+    n = len(changed_lines)
 
-        # Also check untracked
-        result2 = subprocess.run(
-            ["git", "-C", str(MEMORY_DIR.parent.parent.parent), "ls-files", "--others",
-             "--exclude-standard", "memory/"],
-            capture_output=True, text=True, timeout=5, cwd=str(MEMORY_DIR.parent)
-        )
-        untracked = result2.stdout.strip()
-    except Exception:
-        print("{}")
-        return
+    # Auto-commit
+    run(["git", "add", "memory/"], cwd=BOT_REPO)
+    run(["git", "commit", "-m", f"memory: auto-sync {n} file(s) at session end"],
+        cwd=BOT_REPO)
 
-    files = []
-    if changed:
-        files.extend(changed.splitlines())
-    if untracked:
-        files.extend(untracked.splitlines())
-
-    if not files:
-        print("{}")
-        return
-
-    msg = f"📋 **{len(files)} memory file(s) uncommitted:**\n"
-    msg += "\n".join(f"  - {f}" for f in files[:10])
-    msg += "\nCommit these before ending the session."
-    print(json.dumps({"systemMessage": msg}))
+    print(json.dumps({"systemMessage": f"Memory auto-committed: {n} file(s) synced to telegram-claude-bot."}))
 
 
 if __name__ == "__main__":

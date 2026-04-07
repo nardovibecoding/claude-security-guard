@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE
+# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 #!/usr/bin/env python3
 """PreToolUse hook: block gh repo visibility public until all checks pass.
 
@@ -150,11 +150,11 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
 
     # 9. GitHub description and topics (if repo exists on GitHub)
     # Extract GitHub repo name from the command (may differ from local dir name)
-    gh_match = re.search(r'<github-user>/([a-zA-Z0-9_-]+)', cmd)
+    gh_match = re.search(r'nardovibecoding/([a-zA-Z0-9_-]+)', cmd)
     gh_repo_name = gh_match.group(1) if gh_match else repo_path.name
     try:
         r = subprocess.run(
-            ["gh", "repo", "view", f"<github-user>/{gh_repo_name}", "--json", "description,repositoryTopics"],
+            ["gh", "repo", "view", f"nardovibecoding/{gh_repo_name}", "--json", "description,repositoryTopics"],
             capture_output=True, text=True, timeout=10
         )
         if r.returncode == 0:
@@ -275,9 +275,9 @@ def action(tool_name: str, tool_input: dict, input_data: dict) -> dict:
 
 def _find_repo_path(cmd: str = "") -> Path | None:
     """Find repo path from the gh command or cwd."""
-    # Try to extract repo name from gh command: gh repo edit <github-user>/REPO ...
+    # Try to extract repo name from gh command: gh repo edit nardovibecoding/REPO ...
     if cmd:
-        match = re.search(r'<github-user>/([a-zA-Z0-9_-]+)', cmd)
+        match = re.search(r'nardovibecoding/([a-zA-Z0-9_-]+)', cmd)
         if match:
             repo_name = match.group(1)
             # Check common local paths

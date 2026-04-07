@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 """Stop hook: remind to save content-worthy moments before session ends."""
 import json
+import os
 import sys
 from pathlib import Path
+
+# Skip during convos (auto-clear flow)
+_tty = os.environ.get("CLAUDE_TTY_ID", "").strip()
+if Path(f"/tmp/claude_ctx_exit_pending_{_tty}").exists() if _tty else Path("/tmp/claude_ctx_exit_pending").exists():
+    print("{}")
+    sys.exit(0)
 
 CONTENT_LOG = Path.home() / "telegram-claude-bot" / "content_drafts" / "running_log.md"
 CTX_FILE = Path("/tmp/claude_ctx_pct")

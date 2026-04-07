@@ -27,8 +27,8 @@ except Exception:
 
 # Patterns that suggest hardcoded paths (should use ~ or Path.home())
 BAD_PATTERNS = [
-    "~/",
-    "~/",
+    "/Users/bernard/",
+    "/home/bernard/",
 ]
 
 

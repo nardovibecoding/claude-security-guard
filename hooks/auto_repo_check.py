@@ -9,9 +9,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from hook_base import run_hook
 
 
-# Auto-detect: any repo under <github-user> is public and should have up-to-date READMEs
+# Auto-detect: any repo under nardovibecoding is public and should have up-to-date READMEs
 # No hardcoded list — checks the git remote URL instead
-PUBLIC_ORG = "<github-user>"
+PUBLIC_ORG = "nardovibecoding"
 
 
 def check(tool_name, tool_input, input_data):
@@ -34,7 +34,7 @@ def action(tool_name, tool_input, input_data):
     except Exception:
         return None
 
-    # Check if it's one of our public repos (any repo under <github-user>)
+    # Check if it's one of our public repos (any repo under nardovibecoding)
     if PUBLIC_ORG not in remote_url:
         return None  # Not our org, skip
 

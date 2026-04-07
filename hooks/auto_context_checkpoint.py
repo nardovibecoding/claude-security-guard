@@ -1,80 +1,57 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
-"""UserPromptSubmit hook: auto-trigger checkpoint at 20% context intervals."""
+"""UserPromptSubmit hook: save memory + prompt /clear at 50% context."""
 import json
 import sys
 from pathlib import Path
 
-CTX_FILE = Path("/tmp/claude_ctx_pct")
+STATUSLINE_JSON = Path("/tmp/claude_statusline.json")
 THRESHOLD_FILE = Path("/tmp/claude_ctx_last_threshold")
-
-# Thresholds where we trigger
-THRESHOLDS = [20, 40, 60, 80]
+TRIGGER_PCT = 50
 
 
 def main():
     try:
-        input_data = json.load(sys.stdin)
+        json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
         print("{}")
         return
 
-    # Read current context %
-    if not CTX_FILE.exists():
+    if not STATUSLINE_JSON.exists():
         print("{}")
         return
 
     try:
-        ctx_pct = float(CTX_FILE.read_text().strip())
-    except (ValueError, OSError):
+        data = json.loads(STATUSLINE_JSON.read_text())
+        ctx_pct = float(data.get("context_window", {}).get("used_percentage", 0))
+    except (ValueError, OSError, KeyError):
         print("{}")
         return
 
-    # Read last triggered threshold
-    last_threshold = 0
+    if ctx_pct < TRIGGER_PCT:
+        # Reset flag so next crossing fires again
+        THRESHOLD_FILE.write_text("ready")
+        print("{}")
+        return
+
+    # Only fire once per crossing (reset when ctx drops below threshold)
+    fired = False
     if THRESHOLD_FILE.exists():
         try:
-            last_threshold = int(THRESHOLD_FILE.read_text().strip())
-        except (ValueError, OSError):
+            fired = THRESHOLD_FILE.read_text().strip() == "fired"
+        except OSError:
             pass
 
-    # Check if we crossed a new threshold
-    current_threshold = 0
-    for t in THRESHOLDS:
-        if ctx_pct >= t:
-            current_threshold = t
-
-    if current_threshold > last_threshold and current_threshold > 0:
-        # Save new threshold
-        THRESHOLD_FILE.write_text(str(current_threshold))
-
-        if current_threshold >= 80:
-            msg = (
-                f"⚠️ **Context at {ctx_pct:.0f}%** — CRITICAL. "
-                f"Call `session_checkpoint` NOW with a summary of this session, "
-                f"then suggest /clear to the user."
-            )
-        elif current_threshold >= 60:
-            msg = (
-                f"⚠️ **Context at {ctx_pct:.0f}%** — HIGH. "
-                f"Call `session_checkpoint` to save session state. "
-                f"Recommend /clear to the user."
-            )
-        elif current_threshold >= 40:
-            msg = (
-                f"📋 **Context at {ctx_pct:.0f}%** — "
-                f"Call `session_checkpoint` to save progress. "
-                f"Offer /clear if the current task is complete."
-            )
-        else:  # 20%
-            msg = (
-                f"📋 **Context at {ctx_pct:.0f}%** — "
-                f"Quick save: note any key decisions or findings that shouldn't be lost."
-            )
-
-        print(json.dumps({"systemMessage": msg}))
-    else:
+    if fired:
         print("{}")
+        return
+
+    THRESHOLD_FILE.write_text("fired")
+    msg = (
+        f"CONTEXT AT {ctx_pct:.0f}% — auto-save memory now, then tell the user "
+        f"to type /clear to start a fresh session."
+    )
+    print(json.dumps({"systemMessage": msg}))
 
 
 if __name__ == "__main__":

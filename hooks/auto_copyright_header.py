@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE
+# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
 #!/usr/bin/env python3
 """PostToolUse hook: check copyright header after writing .py/.js files."""
 import json
@@ -54,7 +54,7 @@ def main():
     print(json.dumps({
         "systemMessage": (
             f"⚠️ **`{fname}` missing copyright header.** Add to top:\n"
-            f"`# Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE`"
+            f"`# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE`"
         )
     }))
 
