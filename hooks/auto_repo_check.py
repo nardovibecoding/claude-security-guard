@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: auto_repo_check
+# fires_on: PostToolUse
+# relevant_intents: [git, code]
+# irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, vps, sync, memory, debug]
+# cost_score: 2
+# always_fire: false
 """PostToolUse hook: after git push to public repos → remind to check README/description sync."""
+import io
 import json
 import re
 import subprocess
@@ -9,9 +17,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from hook_base import run_hook
 
 
-# Auto-detect: any repo under nardovibecoding is public and should have up-to-date READMEs
+# Auto-detect: any repo under <github-user> is public and should have up-to-date READMEs
 # No hardcoded list — checks the git remote URL instead
-PUBLIC_ORG = "nardovibecoding"
+PUBLIC_ORG = "<github-user>"
 
 
 def check(tool_name, tool_input, input_data):
@@ -34,7 +42,7 @@ def action(tool_name, tool_input, input_data):
     except Exception:
         return None
 
-    # Check if it's one of our public repos (any repo under nardovibecoding)
+    # Check if it's one of our public repos (any repo under <github-user>)
     if PUBLIC_ORG not in remote_url:
         return None  # Not our org, skip
 
@@ -70,4 +78,14 @@ def action(tool_name, tool_input, input_data):
 
 
 if __name__ == "__main__":
+    _raw = sys.stdin.read()
+    try:
+        _prompt = json.loads(_raw).get("prompt", "") if _raw else ""
+    except Exception:
+        _prompt = ""
+    from _semantic_router import should_fire
+    if not should_fire(__file__, _prompt):
+        print("{}")
+        sys.exit(0)
+    sys.stdin = io.StringIO(_raw)
     run_hook(check, action, "auto_repo_check")

@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: auto_license
+# fires_on: PostToolUse
+# relevant_intents: [git, code]
+# irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, vps, sync, memory, debug]
+# cost_score: 2
+# always_fire: false
 """PostToolUse hook: after gh repo create → auto-setup all mechanical parts + prompt all writing parts."""
+import io
+import json
 import re
 import subprocess
 import sys
@@ -26,7 +35,7 @@ def action(tool_name, tool_input, input_data):
     license_path = Path(cwd) / "LICENSE"
     if not license_path.exists():
         try:
-            header = "Copyright (c) 2026 Nardo (nardovibecoding)\n\n"
+            header = "Copyright (c) 2026 Nardo (<github-user>)\n\n"
             result = subprocess.run(
                 ["curl", "-sL", "https://www.gnu.org/licenses/agpl-3.0.txt"],
                 capture_output=True, text=True, timeout=10
@@ -54,7 +63,7 @@ def action(tool_name, tool_input, input_data):
     notice_path = Path(cwd) / "NOTICE"
     if not notice_path.exists():
         notice_path.write_text(
-            "This project is maintained by Nardo (@nardovibecoding).\n"
+            "This project is maintained by Nardo (@<github-user>).\n"
             "Licensed under AGPL-3.0. See LICENSE for details.\n"
         )
         done.append("✅ NOTICE")
@@ -80,4 +89,14 @@ def action(tool_name, tool_input, input_data):
 
 
 if __name__ == "__main__":
+    _raw = sys.stdin.read()
+    try:
+        _prompt = json.loads(_raw).get("prompt", "") if _raw else ""
+    except Exception:
+        _prompt = ""
+    from _semantic_router import should_fire
+    if not should_fire(__file__, _prompt):
+        print("{}")
+        sys.exit(0)
+    sys.stdin = io.StringIO(_raw)
     run_hook(check, action, "auto_license")

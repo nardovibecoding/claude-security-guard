@@ -11,9 +11,9 @@ PUBLIC_REPO = Path.home() / "claude-skills-curation/skills"
 
 # Sanitization: strip private paths before writing to public repo
 _STRIP = [
-    (re.compile(r"/Users/bernard/telegram-claude-bot/"), "./"),
-    (re.compile(r"/Users/bernard/"), "~/"),
-    (re.compile(r"/home/bernard/"), "~/"),
+    (re.compile(r"~/telegram-claude-bot/"), "./"),
+    (re.compile(r"~/"), "~/"),
+    (re.compile(r"~/"), "~/"),
     (re.compile(r"bernard@157\.180\.28\.14"), "<user>@<vps-ip>"),
     (re.compile(r"~/.claude/projects/[^\s/]+/memory/"), "~/.claude/projects/*/memory/"),
 ]

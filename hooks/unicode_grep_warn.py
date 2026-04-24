@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: unicode_grep_warn
+# fires_on: PreToolUse
+# always_fire: true
+# cost_score: 1
 """PreToolUse hook: warn to also search unicode escapes when grepping CJK characters."""
 import json
 import re

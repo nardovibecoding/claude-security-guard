@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
+# @bigd-hook-meta
+# name: auto_review_before_done
+# fires_on: Stop
+# always_fire: true
+# cost_score: 2
+# Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE
 """
 auto_review_before_done.py — Stop hook
 
@@ -219,4 +224,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).parent))
+    from _safe_hook import safe_run
+    safe_run(main, "auto_review_before_done")

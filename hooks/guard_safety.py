@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
+# @bigd-hook-meta
+# name: guard_safety
+# fires_on: PreToolUse
+# always_fire: true
+# cost_score: 1
+# Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE
 """PreToolUse hook: block destructive ops, VPS direct access, hook tampering, credential reads, git hook bypass, branch creation."""
 import re
 import sys
@@ -46,6 +51,25 @@ _BASH_DENY = re.compile(
     # P1 #5 — block --no-verify / --no-gpg-sign on git commands
     r"git\s+(commit|push)\s+.*--no-verify|--no-verify\s+.*git\s+(commit|push)|"
     r"git\s+(commit|push)\s+.*--no-gpg-sign|--no-gpg-sign\s+.*git\s+(commit|push)"
+)
+
+# prediction-markets + on-chain-bots are permanently private — block all GitHub exposure
+_PM_BLOCK = re.compile(r"prediction.markets|on.chain.bots", re.IGNORECASE)
+_PM_GIT_OPS = re.compile(r"git\s+(push|remote\s+set.url|remote\s+add)|gh\s+repo\s+(create|delete|view|clone)")
+
+# Private data — block git add on sensitive paths
+_PRIVATE_ADD = re.compile(
+    r"git\s+add\s+.*("
+    r"\.env|portfolio\.json|trades\.jsonl|calibration_curve\.json|"
+    r"memory/|/memory\b|wiki/|nardoworld|"
+    r"scanner\.log|llm_calibration\.jsonl|positions\.json|"
+    r"cookie|token|credential|secret|password|passwd|auth\.json|access\.json|"
+    r"\.key|\.pem|\.p8|\.p12|\.pfx|id_rsa|id_ed25519|"
+    r"config\.yaml|config\.json|settings\.json|\.netrc|\.htpasswd|"
+    r"wallet|keystore|mnemonic|seed_phrase|private_key|privkey|"
+    r"bot_token|\.db|\.sqlite|backup|dump\."
+    r")",
+    re.IGNORECASE
 )
 
 # --- Splitter for compound commands (P0 #3) ---
@@ -98,6 +122,14 @@ def check(tool_name, tool_input, input_data):
         if _check_credential_read(path):
             return "credential_read"
 
+    # prediction-markets hard block — never expose to GitHub or any remote
+    if tool_name == "Bash":
+        cmd = tool_input.get("command", "")
+        if _PM_BLOCK.search(cmd) and _PM_GIT_OPS.search(cmd):
+            return "pm_private"
+        if _PRIVATE_ADD.search(cmd):
+            return "private_data"
+
     # Bash checks (P0 #3 compound decomposition + P1 #5 --no-verify + #14 branch)
     if tool_name == "Bash":
         cmd = tool_input.get("command", "")
@@ -115,6 +147,8 @@ _REASONS = {
     "hook_protect": "Blocked: cannot modify security hooks. This protects against prompt injection disabling the security layer.",
     "credential_read": "Blocked: reading credential directories is restricted.",
     "bash_deny": None,
+    "pm_private": "BLOCKED: prediction-markets / on-chain-bots are permanently private. Never push to GitHub or any remote.",
+    "private_data": "BLOCKED: this path contains private data (portfolio, memory, wiki, .env). Cannot stage for git.",
 }
 
 

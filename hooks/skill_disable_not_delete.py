@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: skill_disable_not_delete
+# fires_on: PreToolUse
+# always_fire: true
+# cost_score: 1
 """PreToolUse hook: warn to rename SKILL.md to .disabled instead of deleting."""
 import json
 import re

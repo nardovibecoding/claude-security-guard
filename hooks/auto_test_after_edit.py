@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: auto_test_after_edit
+# fires_on: PostToolUse
+# relevant_intents: [code, debug, meta]
+# irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, vps, sync, memory]
+# cost_score: 3
+# always_fire: false
 """
 auto_test_after_edit.py — PostToolUse hook
 Auto-runs syntax/test checks after any Edit/Write/MultiEdit.
@@ -12,7 +19,9 @@ Checks by file type:
   other → skip silently
 """
 
+import io
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -246,4 +255,15 @@ def main():
 
 
 if __name__ == "__main__":
+    sys.path.insert(0, os.path.dirname(__file__))
+    _raw = sys.stdin.read()
+    try:
+        _prompt = json.loads(_raw).get("prompt", "") if _raw else ""
+    except Exception:
+        _prompt = ""
+    from _semantic_router import should_fire
+    if not should_fire(__file__, _prompt):
+        print("{}")
+        sys.exit(0)
+    sys.stdin = io.StringIO(_raw)
     main()

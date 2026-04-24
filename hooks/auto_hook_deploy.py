@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: auto_hook_deploy
+# fires_on: PostToolUse
+# relevant_intents: [meta, code]
+# irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, git, vps, sync, memory, debug]
+# cost_score: 2
+# always_fire: false
 """
 auto_hook_deploy.py — PostToolUse hook (Edit|Write)
 When a file in telegram-claude-bot/hooks/ is edited, auto-deploy it
@@ -6,6 +13,7 @@ to ~/.claude/hooks/ with platform filtering.
 Also validates: syntax check, no hardcoded paths, no secrets.
 """
 
+import io
 import json
 import os
 import platform
@@ -27,8 +35,8 @@ except Exception:
 
 # Patterns that suggest hardcoded paths (should use ~ or Path.home())
 BAD_PATTERNS = [
-    "/Users/bernard/",
-    "/home/bernard/",
+    "~/",
+    "~/",
 ]
 
 
@@ -99,4 +107,15 @@ def main():
 
 
 if __name__ == "__main__":
+    sys.path.insert(0, os.path.dirname(__file__))
+    _raw = sys.stdin.read()
+    try:
+        _prompt = json.loads(_raw).get("prompt", "") if _raw else ""
+    except Exception:
+        _prompt = ""
+    from _semantic_router import should_fire
+    if not should_fire(__file__, _prompt):
+        print("{}")
+        sys.exit(0)
+    sys.stdin = io.StringIO(_raw)
     main()

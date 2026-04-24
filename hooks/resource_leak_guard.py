@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Nardo (nardovibecoding). AGPL-3.0 — see LICENSE
+# @bigd-hook-meta
+# name: resource_leak_guard
+# fires_on: PostToolUse
+# relevant_intents: [code, debug]
+# irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, git, vps, sync, memory]
+# cost_score: 2
+# always_fire: false
+# Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE
 """PostToolUse hook: catch resource leak patterns in Python files.
 
 Catches:
@@ -98,4 +105,16 @@ def action(tool_name, tool_input, _input_data):
 
 
 if __name__ == "__main__":
+    import io
+    import json
+    _raw = sys.stdin.read()
+    try:
+        _prompt = json.loads(_raw).get("prompt", "") if _raw else ""
+    except Exception:
+        _prompt = ""
+    from _semantic_router import should_fire
+    if not should_fire(__file__, _prompt):
+        print("{}")
+        sys.exit(0)
+    sys.stdin = io.StringIO(_raw)
     run_hook(check, action, "resource_leak_guard")
