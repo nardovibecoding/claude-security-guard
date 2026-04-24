@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: auto_skill_sync
+# fires_on: PostToolUse
+# relevant_intents: [meta, code]
+# irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, git, vps, sync, memory, debug]
+# cost_score: 2
+# always_fire: false
 """PostToolUse hook: sync public skills to claude-skills-curation, remind VPS sync for private."""
+import io
+import json
 import re
 import subprocess
 import sys
@@ -55,4 +64,14 @@ def action(tool_name, tool_input, input_data):
         return f"Private skill. Sync to VPS: `cd ~/.claude/skills && git add -A && git commit -m 'skill update' && git push`"
 
 if __name__ == "__main__":
+    _raw = sys.stdin.read()
+    try:
+        _prompt = json.loads(_raw).get("prompt", "") if _raw else ""
+    except Exception:
+        _prompt = ""
+    from _semantic_router import should_fire
+    if not should_fire(__file__, _prompt):
+        print("{}")
+        sys.exit(0)
+    sys.stdin = io.StringIO(_raw)
     run_hook(check, action, "auto_skill_sync")

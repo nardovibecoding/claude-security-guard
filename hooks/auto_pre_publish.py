@@ -1,5 +1,12 @@
 # Copyright (c) 2026 Nardo (<github-user>). AGPL-3.0 — see LICENSE
 #!/usr/bin/env python3
+# @bigd-hook-meta
+# name: auto_pre_publish
+# fires_on: PreToolUse
+# relevant_intents: [git, code]
+# irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, vps, sync, memory, debug]
+# cost_score: 3
+# always_fire: false
 """PreToolUse hook: block gh repo visibility public until all checks pass.
 
 Intercepts:
@@ -8,7 +15,9 @@ Intercepts:
 
 Runs 12 checks: secrets, license, gitignore, artifacts, binaries, NOTICE, copyright headers.
 """
+import io
 import json
+import os
 import re
 import subprocess
 import sys
@@ -317,7 +326,17 @@ def _git_tracked_files(repo_path: Path) -> list[Path]:
 
 
 if __name__ == "__main__":
-    data = json.loads(sys.stdin.read())
+    sys.path.insert(0, os.path.dirname(__file__))
+    _raw = sys.stdin.read()
+    try:
+        _prompt = json.loads(_raw).get("prompt", "") if _raw else ""
+    except Exception:
+        _prompt = ""
+    from _semantic_router import should_fire
+    if not should_fire(__file__, _prompt):
+        print("{}")
+        sys.exit(0)
+    data = json.loads(_raw) if _raw else {}
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
     if check(tool_name, tool_input, data):
