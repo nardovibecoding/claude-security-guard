@@ -35,7 +35,7 @@ class TestSanitize(unittest.TestCase):
         self.assertIn("~/foo", result)
 
     def test_strips_telegram_bot_path(self):
-        result = app._sanitize("read ~/telegram-claude-bot/CLAUDE.md")
+        result = app._sanitize("read ${PROJECT_ROOT:-~/your-project}/CLAUDE.md")
         self.assertNotIn("telegram-claude-bot", result)
 
     def test_strips_vps_ip(self):

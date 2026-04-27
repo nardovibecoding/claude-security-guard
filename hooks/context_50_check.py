@@ -71,7 +71,7 @@ def main():
                 f"CONTEXT AT {ctx_pct:.0f}%. Auto-save now. "
                 f"1. Set tab title (bash, foreground). "
                 f"2. Spawn ONE background Agent (model=sonnet, run_in_background=true) to: "
-                f"write convo summary to memory, add MEMORY.md pointer, file atoms to ~/NardoWorld/. "
+                f"write convo summary to memory, add MEMORY.md pointer, file atoms to ${VAULT_ROOT:-~/your-vault}/. "
                 f"3. Print 'Saving... /clear' so user can /clear immediately. "
                 f"4. Then answer the user's message normally. "
                 f"Do not ask permission. Do this alongside your response."

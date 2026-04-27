@@ -1,5 +1,5 @@
 {
-  "description": "claude-sec-ops-guard — security enforcement, opsec scanning, and ops automation",
+  "description": "simply-ops-guard — security enforcement, opsec scanning, and ops automation",
   "hooks": {
     "SessionStart": [
       {

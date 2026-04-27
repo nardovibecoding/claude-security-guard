@@ -25,7 +25,7 @@ def main():
 
     # Check cookie freshness
     ok, out = ssh_cmd(
-        "find ~/telegram-claude-bot -name '*cookie*' -mtime +7 -type f 2>/dev/null | head -5"
+        "find ${PROJECT_ROOT:-~/your-project} -name '*cookie*' -mtime +7 -type f 2>/dev/null | head -5"
     )
     if ok and out:
         stale = out.count("\n") + 1

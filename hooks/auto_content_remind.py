@@ -11,7 +11,7 @@ if Path(f"/tmp/claude_ctx_exit_pending_{_tty}").exists() if _tty else Path("/tmp
     print("{}")
     sys.exit(0)
 
-CONTENT_LOG = Path.home() / "telegram-claude-bot" / "content_drafts" / "running_log.md"
+CONTENT_LOG = Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project"))) / "content_drafts" / "running_log.md"
 CTX_FILE = Path("/tmp/claude_ctx_pct")
 
 

@@ -20,7 +20,7 @@ def action(tool_name, tool_input, input_data):
 
     import subprocess
     from pathlib import Path
-    scripts = Path.home() / "telegram-claude-bot" / "scripts"
+    scripts = Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project"))) / "scripts"
 
     # Auto-sync public extracted repos (sec-ops-guard, quality-gate, etc.)
     sync_script = scripts / "sync_public_repos.py"

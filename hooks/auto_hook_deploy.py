@@ -22,7 +22,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_HOOKS = Path.home() / "telegram-claude-bot" / "hooks"
+REPO_HOOKS = Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project"))) / "hooks"
 TARGET_HOOKS = Path.home() / ".claude" / "hooks"
 
 # Read Mac-only hooks from shared JSON (single source of truth)

@@ -1,7 +1,7 @@
-# claude-sec-ops-guard
+# simply-ops-guard
 
 ```bash
-claude plugins install nardovibecoding/claude-sec-ops-guard
+claude plugins install nardovibecoding/simply-ops-guard
 ```
 
 ---
@@ -100,20 +100,20 @@ Persistent process — holds state, connects to VPS, answers real-time queries.
 ## Install
 
 ```bash
-claude plugins install nardovibecoding/claude-sec-ops-guard
+claude plugins install nardovibecoding/simply-ops-guard
 ```
 
 Requires Python 3.10+ and optional VPS config for ops automation hooks.
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/nardovibecoding/claude-sec-ops-guard/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/nardovibecoding/simply-ops-guard/main/install.sh)
 ```
 
 ---
 
 ## Related
 
-- [claude-quality-gate](https://github.com/nardovibecoding/claude-quality-gate) — 10 hooks for code quality enforcement
+- [simply-quality-gate](https://github.com/nardovibecoding/simply-quality-gate) — 10 hooks for code quality enforcement
 
 ---
 

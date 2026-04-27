@@ -14,7 +14,7 @@ if Path(f"/tmp/claude_ctx_exit_pending_{_tty}").exists() if _tty else Path("/tmp
     sys.exit(0)
 
 MEMORY_SRC = Path.home() / ".claude" / "projects" / f"-Users-{Path.home().name}" / "memory"
-BOT_REPO = Path.home() / "telegram-claude-bot"
+BOT_REPO = Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project")))
 MEMORY_DST = BOT_REPO / "memory"
 
 

@@ -6,7 +6,7 @@
 # irrelevant_intents: [bigd, pm, telegram, docx, x_tweet, git, vps, sync, memory, debug]
 # cost_score: 2
 # always_fire: false
-"""PostToolUse hook: sync public skills to claude-skills-curation, remind VPS sync for private."""
+"""PostToolUse hook: sync public skills to simply-skills-curation, remind VPS sync for private."""
 import io
 import json
 import re
@@ -16,11 +16,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from hook_base import run_hook
 
-PUBLIC_REPO = Path.home() / "claude-skills-curation/skills"
+PUBLIC_REPO = Path.home() / "simply-skills-curation/skills"
 
 # Sanitization: strip private paths before writing to public repo
 _STRIP = [
-    (re.compile(r"~/telegram-claude-bot/"), "./"),
+    (re.compile(r"${PROJECT_ROOT:-~/your-project}/"), "./"),
     (re.compile(r"~/"), "~/"),
     (re.compile(r"~/"), "~/"),
     (re.compile(r"bernard@157\.180\.28\.14"), "<user>@<vps-ip>"),
@@ -53,11 +53,11 @@ def action(tool_name, tool_input, input_data):
         content = _sanitize(file_path.read_text())
         public_dest.write_text(content)
         result = subprocess.run(
-            f'cd ~/claude-skills-curation && git add skills && git commit -m "skill update: {skill_name}" && git push',
+            f'cd ~/simply-skills-curation && git add skills && git commit -m "skill update: {skill_name}" && git push',
             shell=True, capture_output=True, text=True
         )
         if result.returncode == 0:
-            return f"Public skill '{skill_name}' synced to claude-skills-curation."
+            return f"Public skill '{skill_name}' synced to simply-skills-curation."
         else:
             return f"Public skill '{skill_name}' copied but git push failed: {result.stderr.strip()}"
     else:

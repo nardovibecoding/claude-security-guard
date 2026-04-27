@@ -61,7 +61,7 @@ def find_test_file(file_path: Path):
     return None
 
 
-_PROJECT = Path.home() / "telegram-claude-bot"
+_PROJECT = Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project")))
 
 # Model names that must only appear in llm_client.py
 _MODEL_PATTERNS = [

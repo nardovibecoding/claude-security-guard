@@ -26,44 +26,44 @@ sys.path.insert(0, str(Path(__file__).parent))
 from hook_base import run_hook
 
 _HOME = str(Path.home())
-_PROJECT = Path.home() / "telegram-claude-bot"
+_PROJECT = Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project")))
 _DEP_VALUE_LOG = "/tmp/dep_value_grep.log"
 
 # Files in sync_public_repos.py SYNC_MAP → which public repos they sync to
 _CROSS_REPO_MAP = {
-    # claude-sec-ops-guard + others
-    "guard_safety.py":            ["claude-sec-ops-guard", "claude-skills-curation"],
-    "hook_base.py":               ["claude-sec-ops-guard", "claude-quality-gate", "claude-skills-curation"],
-    "test_helpers.py":            ["claude-sec-ops-guard", "claude-quality-gate"],
-    "auto_copyright_header.py":   ["claude-sec-ops-guard", "claude-quality-gate"],
-    "auto_license.py":            ["claude-sec-ops-guard", "claude-quality-gate"],
-    "auto_repo_check.py":         ["claude-sec-ops-guard"],
-    "auto_pre_publish.py":        ["claude-sec-ops-guard"],
-    "auto_hook_deploy.py":        ["claude-sec-ops-guard"],
-    "auto_skill_sync.py":         ["claude-sec-ops-guard", "claude-skills-curation"],
-    "auto_dependency_grep.py":    ["claude-sec-ops-guard", "claude-skills-curation"],
-    "auto_test_after_edit.py":    ["claude-sec-ops-guard", "claude-quality-gate"],
-    "auto_review_before_done.py": ["claude-sec-ops-guard", "claude-quality-gate"],
-    "verify_infra.py":            ["claude-sec-ops-guard"],
-    "pre_commit_validate.py":     ["claude-sec-ops-guard", "claude-quality-gate"],
-    "reasoning_leak_canary.py":   ["claude-sec-ops-guard"],
-    "skill_disable_not_delete.py":["claude-sec-ops-guard"],
-    "unicode_grep_warn.py":       ["claude-sec-ops-guard", "claude-quality-gate"],
-    # claude-quality-gate only
-    "async_safety_guard.py":      ["claude-quality-gate"],
-    "resource_leak_guard.py":     ["claude-quality-gate"],
-    "hardcoded_model_guard.py":   ["claude-quality-gate"],
-    "tg_security_guard.py":       ["claude-quality-gate"],
-    "tg_api_guard.py":            ["claude-quality-gate"],
-    "admin_only_guard.py":        ["claude-quality-gate"],
-    "temp_file_guard.py":         ["claude-quality-gate"],
-    # claude-skills-curation
-    "auto_vps_sync.py":           ["claude-skills-curation"],
-    "auto_memory_index.py":       ["claude-skills-curation"],
-    "auto_pip_install.py":        ["claude-skills-curation"],
-    "auto_content_remind.py":     ["claude-skills-curation"],
-    "auto_restart_process.py":    ["claude-skills-curation"],
-    "auto_bot_restart.py":        ["claude-skills-curation"],
+    # simply-ops-guard + others
+    "guard_safety.py":            ["simply-ops-guard", "simply-skills-curation"],
+    "hook_base.py":               ["simply-ops-guard", "simply-quality-gate", "simply-skills-curation"],
+    "test_helpers.py":            ["simply-ops-guard", "simply-quality-gate"],
+    "auto_copyright_header.py":   ["simply-ops-guard", "simply-quality-gate"],
+    "auto_license.py":            ["simply-ops-guard", "simply-quality-gate"],
+    "auto_repo_check.py":         ["simply-ops-guard"],
+    "auto_pre_publish.py":        ["simply-ops-guard"],
+    "auto_hook_deploy.py":        ["simply-ops-guard"],
+    "auto_skill_sync.py":         ["simply-ops-guard", "simply-skills-curation"],
+    "auto_dependency_grep.py":    ["simply-ops-guard", "simply-skills-curation"],
+    "auto_test_after_edit.py":    ["simply-ops-guard", "simply-quality-gate"],
+    "auto_review_before_done.py": ["simply-ops-guard", "simply-quality-gate"],
+    "verify_infra.py":            ["simply-ops-guard"],
+    "pre_commit_validate.py":     ["simply-ops-guard", "simply-quality-gate"],
+    "reasoning_leak_canary.py":   ["simply-ops-guard"],
+    "skill_disable_not_delete.py":["simply-ops-guard"],
+    "unicode_grep_warn.py":       ["simply-ops-guard", "simply-quality-gate"],
+    # simply-quality-gate only
+    "async_safety_guard.py":      ["simply-quality-gate"],
+    "resource_leak_guard.py":     ["simply-quality-gate"],
+    "hardcoded_model_guard.py":   ["simply-quality-gate"],
+    "tg_security_guard.py":       ["simply-quality-gate"],
+    "tg_api_guard.py":            ["simply-quality-gate"],
+    "admin_only_guard.py":        ["simply-quality-gate"],
+    "temp_file_guard.py":         ["simply-quality-gate"],
+    # simply-skills-curation
+    "auto_vps_sync.py":           ["simply-skills-curation"],
+    "auto_memory_index.py":       ["simply-skills-curation"],
+    "auto_pip_install.py":        ["simply-skills-curation"],
+    "auto_content_remind.py":     ["simply-skills-curation"],
+    "auto_restart_process.py":    ["simply-skills-curation"],
+    "auto_bot_restart.py":        ["simply-skills-curation"],
     # claude-social-pipeline
     "tweet_stats.py":             ["claude-social-pipeline"],
 }
@@ -176,7 +176,7 @@ def _value_grep_log(fname: str, content: str) -> None:
         if not values:
             return
         search_dirs = [
-            str(Path.home() / "telegram-claude-bot"),
+            str(Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project")))),
             str(Path.home() / ".claude" / "hooks"),
         ]
         ts = datetime.now().strftime("%H:%M")
@@ -228,7 +228,7 @@ def action(tool_name, tool_input, _input_data):
             return None
 
         search_dirs = [
-            str(Path.home() / "telegram-claude-bot"),
+            str(Path(os.environ.get("PROJECT_ROOT", str(Path.home() / "your-project")))),
             str(Path.home() / ".claude"),
         ]
         refs = []
